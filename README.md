@@ -111,44 +111,44 @@ Me chamo Enzo, tenho 20 anos e sou natural de Piracicaba. Concluí o ensino méd
     src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/sass/sass-original.svg" 
 />
 <img 
-    alinhar="esquerda" 
+    align="left" 
     alt="PHP" 
-    título="PHP"
-    largura="30px" 
-    estilo="preenchimento direito: 10px;" 
-    fonte="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" 
+    title="PHP"
+    width="30px" 
+    style="padding-right: 10px;" 
+    src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/php/php-original.svg" 
 />
-<imagem 
-    alinhar="esquerda" 
+<img 
+    align="left" 
     alt="Laravel" 
-    título="Laravel"
-    largura="30px" 
-    estilo="preenchimento direito: 10px;" 
-    fonte="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/laravel/laravel-original.svg" 
+    title="Laravel"
+    width="30px" 
+    style="padding-right: 10px;" 
+    src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/laravel/laravel-original.svg" 
 />
-<imagem 
-    alinhar="esquerda" 
+<img 
+    align="left" 
     alt="JQuery" 
-    título="JQuery"
-    largura="30px" 
-    estilo="preenchimento direito: 10px;" 
-    fonte="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/jquery/jquery-original.svg" 
+    title="JQuery"
+    width="30px" 
+    style="padding-right: 10px;" 
+    src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/jquery/jquery-original.svg" 
 />
-<imagem 
-    alinhar="esquerda" 
+<img 
+    align="left" 
     alt="Git" 
-    título="Git"
-    largura="30px" 
-    estilo="preenchimento direito: 10px;" 
-    fonte="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg" 
+    title="Git"
+    width="30px" 
+    style="padding-right: 10px;" 
+    src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg" 
 />
-<imagem 
-    alinhar="esquerda" 
+<img 
+    align="left" 
     alt="Python" 
-    título="Python"
-    largura="30px" 
-    estilo="preenchimento direito: 10px;" 
-    fonte="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" 
+    title="Python"
+    width="30px" 
+    style="padding-right: 10px;" 
+    src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" 
 />
 
 <br/>
@@ -157,19 +157,19 @@ Me chamo Enzo, tenho 20 anos e sou natural de Piracicaba. Concluí o ensino méd
 ### 📊 Estatísticas
 
 <p>
-  <imagem 
-    alinhar="esquerda" 
-    alt="Estatísticas do GitHub" 
-    altura="200" 
-    estilo="preenchimento direito: 10px;" 
-    fonte="https://github-readme-stats.vercel.app/api?username=EnzoOlivah&mostrar_ícones=verdadeiro&tema=tokyonight&incluir_todos_commits=verdadeiro&localidade=pt-br" 
+  <img 
+    align="left" 
+    alt="GitHub Stats" 
+    height="200" 
+    style="padding-right: 10px;" 
+    src="https://github-readme-stats.vercel.app/api?username=EnzoOlivah&show_icons=true&theme=tokyonight&include_all_commits=true&locale=pt-br" 
   />
 
-<imagem 
-      alinhar="esquerda" 
-      alt="Estatísticas do GitHub" 
-      altura="200" 
-      fonte="https://github-readme-stats.vercel.app/api/top-langs/?username=larissakich&tema=tokyonight&layout=compacto&custom_title=Tecnologias&contagem_langs=9" 
+<img 
+      align="left" 
+      alt="GitHub Stats" 
+      height="200" 
+      src="https://github-readme-stats.vercel.app/api/top-langs/?username=larissakich&theme=tokyonight&layout=compact&custom_title=Tecnologias&langs_count=9" 
   />
 
 </p>
