@@ -186,6 +186,7 @@ input[type="range"] { flex: 1; accent-color: var(--ink); }
 .steps b { color: var(--ink); font-weight: 600; }
 code { font-family: var(--mono); font-size: .9em; }
 pre { margin: 0; padding: 14px; border-radius: 14px; background: var(--ground); border: 1px solid var(--line); overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; color: var(--ink); }
+.diag { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.5; color: var(--ink-dim); overflow-wrap: anywhere; }
 .err { color: var(--danger); font-size: 14px; line-height: 1.5; margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -259,6 +260,7 @@ pre { margin: 0; padding: 14px; border-radius: 14px; background: var(--ground); 
       <div><strong id="rxTitle">Receptor desligado</strong><span id="rxSub">Ative para receber comandos do celular.</span></div>
     </div>
     <p class="err" id="rxErr" hidden></p>
+    <p class="diag" id="rxDiag">Diagnóstico: nenhum comando recebido ainda.</p>
     <div class="actions">
       <button class="btn primary" id="rxToggle">Ativar receptor</button>
       <button class="btn" id="rxTest" disabled>Testar cursor</button>
@@ -359,6 +361,8 @@ pre { margin: 0; padding: 14px; border-radius: 14px; background: var(--ground); 
   <h3>Este aparelho</h3>
   <p>O PC precisa estar com este mesmo controle aberto no app Claude para desktop, em modo receptor.</p>
   <button class="btn" id="toReceiver">Usar este aparelho como receptor (PC)</button>
+  <h3>Diagnóstico</h3>
+  <p class="diag" id="txDiag">Nenhum comando enviado ainda.</p>
 </section>
 
 <div class="toast" id="toast" hidden></div>
@@ -420,9 +424,15 @@ pre { margin: 0; padding: 14px; border-radius: 14px; background: var(--ground); 
   let sent = { mx: 0, my: 0, sx: 0, sy: 0 };
   let pending = [], nextId = 1, lastSentMaxId = 0, lastActSend = 0;
   let pcPeer = null, offlineToastAt = 0;
+  const tx = { sent: 0, acked: 0, err: null, shown: null, blocked: 0 };
+  function renderTx() {
+    $("txDiag").textContent = "enviados " + tx.sent + " · confirmados pelo PC " + tx.acked + " · bloqueados (PC offline) " + tx.blocked +
+      " · sala " + (!room ? "indisponível" : room.connected() ? "conectada" : "desconectada") + " · PC " + (pcPeer ? "visto" : "não visto") + (tx.err ? " · último erro " + tx.err : "");
+  }
 
   function act(a) {
     if (!pcPeer) {
+      tx.blocked++; renderTx();
       const now = Date.now();
       if (now - offlineToastAt > 2500) { offlineToastAt = now; toast(room ? "PC offline: abra o receptor no computador" : "Abra este controle no app do Claude"); }
       return;
@@ -443,7 +453,9 @@ pre { margin: 0; padding: 14px; border-radius: 14px; background: var(--ground); 
     const data = { sid, mx: cur.mx, my: cur.my, sx: cur.sx, sy: cur.sy, acts };
     const enc = new TextEncoder();
     while (acts.length > 1 && enc.encode(JSON.stringify(data)).length > 3800) { acts = acts.slice(0, -1); data.acts = acts; }
-    room.emit("rc", data).catch(() => {});
+    tx.sent++;
+    room.emit("rc", data).catch((e) => { tx.err = (e && e.code) || "erro"; if (tx.err !== tx.shown) { tx.shown = tx.err; toast("Não consegui enviar ao PC (" + tx.err + ")"); } renderTx(); });
+    renderTx();
     sent = cur;
     if (acts.length) { lastActSend = now; lastSentMaxId = Math.max(lastSentMaxId, acts[acts.length - 1].id); }
   }
@@ -664,8 +676,17 @@ pre { margin: 0; padding: 14px; border-radius: 14px; background: var(--ground); 
     if (queue.length > 400) queue = queue.filter((x) => x.t !== "move").slice(-200);
   }
 
+  const rx = { got: 0, ignored: 0, why: "", ok: 0, fail: 0, last: "" };
+  function renderRxDiag() {
+    $("rxDiag").textContent = "Diagnóstico: recebidos " + rx.got + " · ignorados " + rx.ignored + (rx.why ? " (" + rx.why + ")" : "") +
+      " · executados " + rx.ok + " · falhas " + rx.fail + (rx.last ? " · último resultado " + rx.last : "");
+  }
   function onRemote(m) {
-    if (!rxActive || !m.isMe || m.sameTab || m.kind !== "viewer") return;   // only your own phone
+    if (m.sameTab) return;
+    rx.got++;
+    const why = !rxActive ? "receptor pausado" : !m.isMe ? "outra conta" : m.kind !== "viewer" ? "remetente " + m.kind : "";
+    if (why) { rx.ignored++; rx.why = why; renderRxDiag(); return; }   // only your own phone
+    renderRxDiag();
     const d = m.data;
     if (!d || typeof d.sid !== "string" || d.sid.length > 16) return;
     const n = (k) => (Number.isFinite(d[k]) ? Math.trunc(d[k]) : 0);
@@ -705,7 +726,9 @@ pre { margin: 0; padding: 14px; border-radius: 14px; background: var(--ground); 
         await mcp.callTool(SERVER, "pc_input", { actions: batch }, { cache: false });
       }
       rxError(null);
+      rx.ok++; rx.last = "ok"; renderRxDiag();
     } catch (e) {
+      rx.fail++; rx.last = (e && e.code) || "erro"; renderRxDiag();
       handleMcpError(e);
     } finally {
       inflight = false;
@@ -814,13 +837,14 @@ pre { margin: 0; padding: 14px; border-radius: 14px; background: var(--ground); 
       room.onConnection(() => renderStatus());
       room.onPeers((ch) => {
         pcPeer = ch.peers.find((p) => p.isMe && !p.sameTab && p.kind === "viewer" && p.presence && p.presence.role === "pc") || null;
-        renderStatus();
+        renderStatus(); renderTx();
         if (rxActive) $("rxSub").textContent = rxSubText();
       }, () => { pcPeer = null; renderStatus(); });
       room.on("rc", onRemote);
       room.on("ack", (m) => {
         if (!m.isMe || !m.data || m.data.sid !== sid || !Number.isInteger(m.data.id)) return;
         pending = pending.filter((a) => a.id > m.data.id);
+        tx.acked++; renderTx();
       });
       if (role === "remote") room.presence({ role: "remote" }).catch(() => {});
     }
