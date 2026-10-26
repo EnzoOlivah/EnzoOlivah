@@ -2,20 +2,33 @@
 
 **`Desenvolvimento`**
 
-Estudante de Engenharia da Computação (EEP, 2o ano) e técnico em Mecatrônica (COTIP), de Piracicaba-SP. Procurando estágio ou vaga júnior em desenvolvimento (presencial em Piracicaba/região ou remoto).
+# Olá, eu sou o Enzo 👋
 
-Gosto de construir coisas que eu mesmo uso. Meu projeto mais recente é um aplicativo Android nativo publicado aqui no GitHub, sem nenhuma biblioteca externa.
+Estudante de **Engenharia da Computação (EEP, 2º ano)** e técnico em **Mecatrônica (COTIP)**, de Piracicaba-SP.
+Procurando **estágio ou vaga júnior em desenvolvimento** (presencial em Piracicaba/região ou remoto).
 
-🚀 Projeto em destaque
+Gosto de construir coisas que eu mesmo uso. Meu projeto mais recente é um app Android nativo publicado aqui no GitHub, sem nenhuma biblioteca externa.
 
-Ilha · Kotlin · Android SDK Uma "ilha dinâmica" (estilo iPhone/HyperOS) ao redor da câmara frontal, para qualquer Android 11+.
+---
 
-Mostra notificações e música tocando (capa do álbum + controles) em volta do furo da câmara
-Leia a posição real da câmara via DisplayCutout e desenhe a ilha num overlay de Acessibilidade
-Filtro de notificações (ignora silenciosas, contínuas, repetições e resumos de grupo)
-Zero dependências externas, zero anúncios, zero coleta de dados
-APK associado disponível em idiomas
-🛠️ Tecnologias
+### 🚀 Projeto em destaque
+
+**[Ilha](https://github.com/EnzoOlivah/ilha)** · Kotlin · Android SDK
+Uma "ilha dinâmica" (estilo iPhone/HyperOS) ao redor da câmera frontal, para qualquer Android 11+.
+
+- Mostra **notificações** e **música tocando** (capa do álbum + controles) em volta do furo da câmera
+- Lê a posição real da câmera via `DisplayCutout` e desenha a ilha num overlay de Acessibilidade
+- Filtro de notificações (ignora silenciosas, contínuas, repetidas e resumos de grupo)
+- Zero dependências externas, zero anúncios, zero coleta de dados
+- APK assinado disponível em [Releases](https://github.com/EnzoOlivah/ilha/releases/latest)
+
+---
+
+### 🛠️ Tecnologias
+
+<p>
+  <img src="https://skillicons.dev/icons?i=kotlin,androidstudio,html,css,sass,js,ts,react,nextjs,tailwind,bootstrap,php,laravel,python,git,gradle" />
+</p>
 
 Modo: Kotlin · Android SDK Front-end: HTML · CSS/SASS · JavaScript · TypeScript · React · Next.js · Tailwind · Bootstrap Back-end: PHP · Laravel · Python Ferramentas: Git · Gradle
 <p alinhar="esquerda">
