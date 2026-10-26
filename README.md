@@ -1,35 +1,49 @@
 # 👩🏻‍💻 Enzo Araújo de Oliveira
 
-**`Desenvolvedor`**
+**`Desenvolvimento`**
 
-Me chamo Enzo, tenho 20 anos e sou natural de Piracicaba. Concluí o ensino médio na COTIP, com o curso técnico em Mecatrônica. Atualmente, estou cursando Engenharia da Computação na EEP. Sou apaixonado por tecnologia e inovação, especialmente pelas áreas de programação, automação e desenvolvimento de sistemas. Busco constantemente aprimorar meus conhecimentos, desenvolver novas habilidades e participar de projetos que contribuam para meu crescimento pessoal e profissional.
+Estudante de Engenharia da Computação (EEP, 2o ano) e técnico em Mecatrônica (COTIP), de Piracicaba-SP. Procurando estágio ou vaga júnior em desenvolvimento (presencial em Piracicaba/região ou remoto).
 
-<p align="left">
-    <!-- Malformed <a> tag removed. If you want to add a badge or link, use a valid <a href="..."><img ... /></a> structure. -->
-    <img
+Gosto de construir coisas que eu mesmo uso. Meu projeto mais recente é um aplicativo Android nativo publicado aqui no GitHub, sem nenhuma biblioteca externa.
+
+🚀 Projeto em destaque
+
+Ilha · Kotlin · Android SDK Uma "ilha dinâmica" (estilo iPhone/HyperOS) ao redor da câmara frontal, para qualquer Android 11+.
+
+Mostra notificações e música tocando (capa do álbum + controles) em volta do furo da câmara
+Leia a posição real da câmara via DisplayCutout e desenhe a ilha num overlay de Acessibilidade
+Filtro de notificações (ignora silenciosas, contínuas, repetições e resumos de grupo)
+Zero dependências externas, zero anúncios, zero coleta de dados
+APK associado disponível em idiomas
+🛠️ Tecnologias
+
+Modo: Kotlin · Android SDK Front-end: HTML · CSS/SASS · JavaScript · TypeScript · React · Next.js · Tailwind · Bootstrap Back-end: PHP · Laravel · Python Ferramentas: Git · Gradle
+<p alinhar="esquerda">
+    <!-- Tag <a> malformada removida. Se você quiser adicionar um emblema ou link, use uma estrutura válida <a href="..."><img ... /></a>. -->
+    <imagem
       alt="Enviar e-mail"
-      title="Entre em contato comigo"
-      src="https://custom-icon-badges.demolab.com/badge/-Enzoaraujo9m%40gmail.com-red?style=for-the-badge&logo=mention&logoColor=white"
+      título="Entre em contato amigo"
+      fonte="https://custom-icon-badges.demolab.com/badge/-Enzoaraujo9m%40gmail.com-red?style=for-the-badge&logotipo=menção&logoColor=branco"
     />
   </a>
 </p>
-  <a href="https://wa.me/5519999604811" target="_blank" rel="noopener noreferrer">
-  <img
+  <a href="https://wa.me/5519999604811" alto="_em branco" relação="noopener noreferrer">
+  <imagem
     alt="WhatsApp"
-    title="Fale comigo pelo WhatsApp"
-    src="https://custom-icon-badges.demolab.com/badge/-WhatsApp-green?style=for-the-badge&logo=whatsapp&logoColor=white"
+    título="Fale amigo pelo WhatsApp"
+    fonte="https://custom-icon-badges.demolab.com/badge/-WhatsApp-green?style=for-the-badge&logotipo=whatsapp&logoColor=branco"
   />
 </a>
 </a>
    <a
   href="https://www.google.com/maps/place/Piracicaba,+SP"
-  target="_blank"
-  rel="noopener noreferrer"
+  alto="_em branco"
+  relação="noopener noreferrer"
 >
-  <img
+  <imagem
     alt="Piracicaba, SP"
-    title="Minha localização: Piracicaba, SP"
-    src="https://custom-icon-badges.demolab.com/badge/-Piracicaba%2C%20SP-purple?style=for-the-badge&logo=location&logoColor=white"
+    título="Minha localização: Piracicaba, SP"
+    fonte="https://custom-icon-badges.demolab.com/badge/-Piracicaba%2C%20SP-purple?style=for-the-badge&logotipo=localização&logoColor=branco"
   />
 </a>
 </p>
@@ -38,28 +52,28 @@ Me chamo Enzo, tenho 20 anos e sou natural de Piracicaba. Concluí o ensino méd
 
 ### 🤖 Linguagens e Tecnologias
 
-<img 
-    align="left" 
+<imagem 
+    alinhar="esquerda" 
     alt="HTML"
-    title="HTML" 
-    width="30px" 
-    style="padding-right: 10px;" 
-    src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" 
+    título="HTML" 
+    largura="30px" 
+    estilo="preenchimento direto: 10px;" 
+    fonte="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" 
 />
-<img 
-    align="left" 
+<imagem 
+    alinhar="esquerda" 
     alt="CSS" 
-    title="CSS"
-    width="30px" 
-    style="padding-right: 10px;" 
-    src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" 
+    título="CSS"
+    largura="30px" 
+    estilo="preenchimento direto: 10px;" 
+    fonte="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" 
 />
-<img 
-    align="left" 
+<imagem 
+    alinhar="esquerda" 
     alt="JavaScript" 
-    title="JavaScript"
-    width="30px" 
-    style="padding-right: 10px;" 
+    título="JavaScript"
+    largura="30px" 
+    estilo="preenchimento direto: 10px;" 
     src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg" 
 />
 <img 
