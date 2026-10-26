@@ -1,0 +1,830 @@
+<title>Controle PC</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: one-screen phone remote — header, touchpad filling the middle, round keys below. Dark-first, like a TV remote. */
+:root {
+  --ground: #1c1c1f;
+  --surface: #323236;
+  --surface-press: #404046;
+  --ink: #ececef;
+  --ink-dim: #a1a1aa;
+  --accent: #f5f5f7;
+  --on-accent: #1c1c1f;
+  --line: #4a4a51;
+  --ok: #5fd08f;
+  --warn: #e9b553;
+  --off: #73737c;
+  --danger: #f0736a;
+  --font: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --ground: #eceef1; --surface: #dadde3; --surface-press: #c9cdd5; --ink: #1b1c20; --ink-dim: #575b64;
+    --accent: #1d1e23; --on-accent: #f5f6f8; --line: #c2c6ce; --ok: #1d9a52; --warn: #a96f12; --off: #8a8f99; --danger: #c6372d;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --ground: #eceef1; --surface: #dadde3; --surface-press: #c9cdd5; --ink: #1b1c20; --ink-dim: #575b64;
+  --accent: #1d1e23; --on-accent: #f5f6f8; --line: #c2c6ce; --ok: #1d9a52; --warn: #a96f12; --off: #8a8f99; --danger: #c6372d;
+  color-scheme: light;
+}
+
+html { height: 100%; box-sizing: border-box; }
+[hidden] { display: none !important; }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  height: 100%;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+svg { display: block; }
+
+.app {
+  height: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-block: 8px 20px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Header */
+.bar { display: flex; align-items: center; gap: 4px; min-height: 56px; }
+.ic { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.ic:active { background: var(--surface); }
+.ic svg { width: 26px; height: 26px; fill: var(--ink); }
+.status-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--off); box-shadow: 0 0 0 4px color-mix(in srgb, var(--off) 22%, transparent); transition: background .3s, box-shadow .3s; }
+.status-dot[data-s="ok"] { background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 22%, transparent); }
+.status-dot[data-s="warn"] { background: var(--warn); box-shadow: 0 0 0 4px color-mix(in srgb, var(--warn) 22%, transparent); }
+.ttl { flex: 1; min-width: 0; padding-left: 8px; }
+.ttl h1 { margin: 0; font-size: 26px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ttl p { margin: 1px 0 0; font-size: 12.5px; color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Touchpad */
+.pad {
+  position: relative;
+  flex: 1;
+  min-height: 220px;
+  background: var(--surface);
+  border-radius: 28px;
+  touch-action: none;
+  overflow: hidden;
+  cursor: crosshair;
+}
+.knob {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 60px; height: 60px;
+  margin: -30px 0 0 -30px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: .9;
+  transition: transform .28s cubic-bezier(.2,.8,.2,1), opacity .2s;
+  pointer-events: none;
+}
+.pad.touching .knob { transition: transform .04s linear, opacity .2s; opacity: .55; }
+.pad.dragging .knob { opacity: 1; box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 18%, transparent); }
+.ripple { position: absolute; width: 90px; height: 90px; margin: -45px 0 0 -45px; border-radius: 50%; border: 2px solid var(--accent); pointer-events: none; animation: ripple .45s ease-out forwards; }
+@keyframes ripple { from { transform: scale(.4); opacity: .7; } to { transform: scale(1.3); opacity: 0; } }
+.hint { position: absolute; left: 0; right: 0; bottom: 14px; margin: 0; padding: 0 20px; text-align: center; font-size: 12px; line-height: 1.5; color: var(--ink-dim); pointer-events: none; text-wrap: balance; }
+
+/* Round keys */
+.nav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+.nav > :first-child { justify-self: start; }
+.nav > :last-child { justify-self: end; }
+.key { background: var(--surface); border-radius: 999px; display: grid; place-items: center; transition: background .12s, transform .12s; }
+.key:active, .key.held { background: var(--surface-press); transform: scale(.96); }
+.key svg { width: 28px; height: 28px; fill: var(--ink); }
+.k-round { width: clamp(68px, 19vw, 86px); height: clamp(68px, 19vw, 86px); }
+.k-home { width: clamp(88px, 25vw, 112px); height: clamp(88px, 25vw, 112px); }
+.k-accent { background: var(--accent); }
+.k-accent svg { fill: var(--on-accent); }
+.k-accent:active { background: var(--accent); opacity: .85; }
+.vol { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.pill { display: grid; grid-template-columns: 1fr 1fr; height: clamp(68px, 19vw, 86px); background: var(--surface); border-radius: 999px; overflow: hidden; }
+.pill .key { border-radius: 0; height: 100%; }
+.pill .key:first-child { border-right: 1px solid var(--line); }
+.pill .key:active { transform: none; }
+.key small { display: none; }
+
+/* Bottom sheets */
+.scrim { position: fixed; inset: 0; background: rgb(0 0 0 / .45); z-index: 20; animation: fade .18s ease-out; }
+@keyframes fade { from { opacity: 0; } }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 21;
+  max-width: 520px; margin: 0 auto;
+  max-height: 86%;
+  overflow-y: auto;
+  background: var(--ground);
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid var(--line);
+  padding: 10px max(20px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; gap: 16px;
+  animation: rise .22s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes rise { from { transform: translateY(40px); opacity: 0; } }
+.grab { width: 36px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 2px; }
+.sheet h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.sheet h3 { margin: 4px 0 0; font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); }
+.sheet p { margin: 0; color: var(--ink-dim); line-height: 1.5; font-size: 14px; }
+.field { width: 100%; height: 52px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 17px; padding: 0 16px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { height: 42px; min-width: 52px; padding: 0 14px; border-radius: 12px; background: var(--surface); font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.chip:active { background: var(--surface-press); }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile { display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 16px; border-radius: 16px; background: var(--surface); text-align: left; font-weight: 500; }
+.tile svg { width: 24px; height: 24px; fill: currentColor; flex: none; }
+.tile:active { background: var(--surface-press); }
+.tile.danger { color: var(--danger); }
+.tile.armed { background: var(--danger); color: var(--on-accent); }
+.row-set { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 48px; }
+.row-set label { font-weight: 500; }
+.row-set output { color: var(--ink-dim); font-variant-numeric: tabular-nums; min-width: 3ch; text-align: right; }
+input[type="range"] { flex: 1; accent-color: var(--ink); }
+.switch { width: 52px; height: 32px; border-radius: 16px; background: var(--surface-press); position: relative; flex: none; transition: background .2s; }
+.switch::after { content: ""; position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: var(--ink-dim); transition: transform .2s, background .2s; }
+.switch[aria-checked="true"] { background: var(--accent); }
+.switch[aria-checked="true"]::after { transform: translateX(20px); background: var(--on-accent); }
+.btn { height: 50px; padding: 0 20px; border-radius: 999px; background: var(--surface); font-weight: 600; }
+.btn:active { background: var(--surface-press); }
+.btn.primary { background: var(--accent); color: var(--on-accent); }
+.btn:disabled { opacity: .5; cursor: default; }
+
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30; max-width: calc(100% - 32px); padding: 12px 18px; border-radius: 14px; background: var(--accent); color: var(--on-accent); font-size: 14px; font-weight: 500; animation: rise .2s ease-out; text-align: center; }
+
+/* Receiver (PC) view */
+.rx { overflow-y: auto; user-select: text; -webkit-user-select: text; gap: 16px; }
+.card { background: var(--surface); border-radius: 22px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.state { display: flex; align-items: center; gap: 14px; }
+.state .status-dot { width: 14px; height: 14px; }
+.state strong { display: block; font-size: 19px; font-weight: 600; }
+.state span { color: var(--ink-dim); font-size: 14px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.card .btn { background: var(--surface-press); }
+.card .btn.primary { background: var(--accent); }
+.log { list-style: none; margin: 0; padding: 0; font-family: var(--mono); font-size: 12.5px; color: var(--ink-dim); display: flex; flex-direction: column; gap: 6px; min-height: 1.5em; }
+.log li { display: flex; gap: 10px; }
+.log time { color: var(--off); font-variant-numeric: tabular-nums; flex: none; }
+.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; line-height: 1.5; color: var(--ink-dim); font-size: 14px; }
+.steps b { color: var(--ink); font-weight: 600; }
+code { font-family: var(--mono); font-size: .9em; }
+pre { margin: 0; padding: 14px; border-radius: 14px; background: var(--ground); border: 1px solid var(--line); overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; color: var(--ink); }
+.err { color: var(--danger); font-size: 14px; line-height: 1.5; margin: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<!-- ============ Controle (celular) ============ -->
+<main class="app" id="remote">
+  <header class="bar">
+    <button class="ic" id="statusBtn" aria-label="Status da conexão"><span class="status-dot" id="dot"></span></button>
+    <div class="ttl">
+      <h1 id="pcName">Meu PC</h1>
+      <p id="statusText">Conectando…</p>
+    </div>
+    <button class="ic" id="kbdBtn" aria-label="Teclado">
+      <svg viewBox="0 0 24 24"><path d="M20 5H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 12H4V7h16v10zM6 8h2v2H6zm3 0h2v2H9zm3 0h2v2h-2zm3 0h2v2h-2zm-9 3h2v2H6zm3 0h2v2H9zm3 0h2v2h-2zm3 0h2v2h-2zm3-3h1v2h-1zm0 3h1v2h-1zM8 14h8v2H8z"/></svg>
+    </button>
+    <button class="ic" id="pwrBtn" aria-label="Energia">
+      <svg viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.17.99-4.1 2.58-5.42L6.17 5.17A8.93 8.93 0 0 0 3 12a9 9 0 0 0 18 0c0-2.74-1.23-5.18-3.17-6.83z"/></svg>
+    </button>
+    <button class="ic" id="moreBtn" aria-label="Mais opções">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+    </button>
+  </header>
+
+  <div class="pad" id="pad" aria-label="Touchpad">
+    <div class="knob" id="knob"></div>
+    <p class="hint">Toque: clique · Segure: botão direito · Dois dedos: rolar · Toque duplo e arraste: arrastar</p>
+  </div>
+
+  <div class="nav">
+    <button class="key k-round" data-act='{"t":"nav","key":"back"}' aria-label="Voltar">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </button>
+    <button class="key k-home" data-act='{"t":"nav","key":"home"}' aria-label="Menu Iniciar">
+      <svg viewBox="0 0 24 24"><path d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm8-2h8v8h-8zm2 2v4h4v-4z"/></svg>
+    </button>
+    <button class="key k-round k-accent" data-act='{"t":"nav","key":"tasks"}' aria-label="Alternar janelas">
+      <svg viewBox="0 0 24 24"><path d="M4 6h11v9H4zm2 2v5h7V8zm11 1h3v9H9v-1.5h9.5V9z"/></svg>
+    </button>
+  </div>
+
+  <div class="vol">
+    <button class="key k-round" data-act='{"t":"media","key":"mute"}' aria-label="Silenciar">
+      <svg viewBox="0 0 24 24"><path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>
+    </button>
+    <div class="pill">
+      <button class="key" data-act='{"t":"media","key":"vol_down"}' data-repeat aria-label="Diminuir volume">
+        <svg viewBox="0 0 24 24"><path d="M18.5 12A4.5 4.5 0 0 0 16 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg>
+      </button>
+      <button class="key" data-act='{"t":"media","key":"vol_up"}' data-repeat aria-label="Aumentar volume">
+        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ============ Receptor (PC) ============ -->
+<main class="app rx" id="receiver" hidden>
+  <header class="bar">
+    <div class="ttl" style="padding-left:0">
+      <h1>Receptor do PC</h1>
+      <p>Deixe esta janela aberta no app Claude do computador</p>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="state">
+      <span class="status-dot" id="rxDot"></span>
+      <div><strong id="rxTitle">Receptor desligado</strong><span id="rxSub">Ative para receber comandos do celular.</span></div>
+    </div>
+    <p class="err" id="rxErr" hidden></p>
+    <div class="actions">
+      <button class="btn primary" id="rxToggle">Ativar receptor</button>
+      <button class="btn" id="rxTest" disabled>Testar cursor</button>
+      <button class="btn" id="rxPerms" hidden>Permissões</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3 style="margin:0;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim)">Últimos comandos</h3>
+    <ul class="log" id="rxLog"><li><span>Nenhum comando ainda.</span></li></ul>
+  </section>
+
+  <section class="card">
+    <h3 style="margin:0;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim)">Configuração (uma vez)</h3>
+    <ol class="steps">
+      <li>Instale o Python e rode <code>pip install "mcp&gt;=1.9" pynput</code>.</li>
+      <li>Salve <b>pc_remote_server.py</b> (pasta <code>pc-remote</code> do repositório) no PC.</li>
+      <li>No app Claude para desktop, abra <b>Configurações → Desenvolvedor → Editar configuração</b> e adicione o servidor abaixo. Reinicie o app.</li>
+      <li>Abra este controle no app desktop, toque em <b>Ativar receptor</b> e permita o acesso.</li>
+    </ol>
+    <pre id="cfg">{
+  "mcpServers": {
+    "pc_remote": {
+      "command": "python",
+      "args": ["C:\\Users\\VOCE\\pc-remote\\pc_remote_server.py"]
+    }
+  }
+}</pre>
+    <div class="actions"><button class="btn" id="copyCfg">Copiar configuração</button></div>
+  </section>
+
+  <div class="actions" style="justify-content:center;padding-bottom:8px">
+    <button class="btn" id="toRemote">Usar este aparelho como controle</button>
+  </div>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<section class="sheet" id="sheetKbd" hidden aria-label="Teclado">
+  <div class="grab"></div>
+  <h2>Teclado</h2>
+  <input class="field" id="kbdIn" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" placeholder="Digite: vai direto para o PC">
+  <div class="chips" id="kbdKeys">
+    <button class="chip" data-act='{"t":"key","key":"enter"}'>Enter</button>
+    <button class="chip" data-act='{"t":"key","key":"backspace"}' data-repeat>⌫</button>
+    <button class="chip" data-act='{"t":"key","key":"tab"}'>Tab</button>
+    <button class="chip" data-act='{"t":"key","key":"esc"}'>Esc</button>
+    <button class="chip" data-act='{"t":"key","key":"space"}'>Espaço</button>
+    <button class="chip" data-act='{"t":"key","key":"left"}' data-repeat aria-label="Seta para a esquerda">←</button>
+    <button class="chip" data-act='{"t":"key","key":"up"}' data-repeat aria-label="Seta para cima">↑</button>
+    <button class="chip" data-act='{"t":"key","key":"down"}' data-repeat aria-label="Seta para baixo">↓</button>
+    <button class="chip" data-act='{"t":"key","key":"right"}' data-repeat aria-label="Seta para a direita">→</button>
+  </div>
+  <h3>Atalhos</h3>
+  <div class="chips">
+    <button class="chip" data-act='{"t":"combo","keys":["mod","c"]}'>Copiar</button>
+    <button class="chip" data-act='{"t":"combo","keys":["mod","v"]}'>Colar</button>
+    <button class="chip" data-act='{"t":"combo","keys":["mod","z"]}'>Desfazer</button>
+    <button class="chip" data-act='{"t":"combo","keys":["mod","a"]}'>Selecionar tudo</button>
+    <button class="chip" data-act='{"t":"combo","keys":["mod","w"]}'>Fechar aba</button>
+    <button class="chip" data-act='{"t":"combo","keys":["alt","f4"]}'>Alt+F4</button>
+    <button class="chip" data-act='{"t":"nav","key":"desktop"}'>Área de trabalho</button>
+  </div>
+</section>
+
+<section class="sheet" id="sheetPwr" hidden aria-label="Energia">
+  <div class="grab"></div>
+  <h2>Energia</h2>
+  <div class="tiles">
+    <button class="tile" data-power="lock"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6a3 3 0 0 1 6 0v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>Bloquear</button>
+    <button class="tile" data-power="sleep"><svg viewBox="0 0 24 24"><path d="M12.34 2.02C6.59 1.82 2 6.42 2 12c0 5.52 4.48 10 10 10 3.71 0 6.93-2.02 8.66-5.02-7.51-.25-12.09-8.43-8.32-14.96z"/></svg>Suspender</button>
+    <button class="tile danger" data-power="restart" data-confirm><svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg><span>Reiniciar</span></button>
+    <button class="tile danger" data-power="shutdown" data-confirm><svg viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.17.99-4.1 2.58-5.42L6.17 5.17A8.93 8.93 0 0 0 3 12a9 9 0 0 0 18 0c0-2.74-1.23-5.18-3.17-6.83z"/></svg><span>Desligar</span></button>
+  </div>
+  <p>Reiniciar e Desligar pedem um segundo toque para confirmar.</p>
+</section>
+
+<section class="sheet" id="sheetMore" hidden aria-label="Mais opções">
+  <div class="grab"></div>
+  <h2>Opções</h2>
+  <h3>Mídia</h3>
+  <div class="chips">
+    <button class="chip" data-act='{"t":"media","key":"prev"}' aria-label="Faixa anterior">⏮ Anterior</button>
+    <button class="chip" data-act='{"t":"media","key":"play_pause"}' aria-label="Tocar ou pausar">⏯ Tocar/Pausar</button>
+    <button class="chip" data-act='{"t":"media","key":"next"}' aria-label="Próxima faixa">Próxima ⏭</button>
+  </div>
+  <h3>Touchpad</h3>
+  <div class="row-set">
+    <label for="sens">Velocidade do cursor</label>
+    <input type="range" id="sens" min="0.6" max="3.4" step="0.2">
+    <output id="sensOut" for="sens"></output>
+  </div>
+  <div class="row-set">
+    <label id="natLbl">Rolagem natural</label>
+    <button class="switch" id="natural" role="switch" aria-labelledby="natLbl"></button>
+  </div>
+  <h3>Este aparelho</h3>
+  <p>O PC precisa estar com este mesmo controle aberto no app Claude para desktop, em modo receptor.</p>
+  <button class="btn" id="toReceiver">Usar este aparelho como receptor (PC)</button>
+</section>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  const SERVER = "host:pc_remote";
+  const $ = (id) => document.getElementById(id);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("pcr." + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem("pcr." + k, JSON.stringify(v)); } catch {} },
+  };
+  const settings = { sens: store.get("sens", 1.6), natural: store.get("natural", true) };
+  let role = store.get("role", "remote");
+
+  let room = null, mcp = null, perms = null;
+  const use = (name) => (window.claude ? window.claude.use(name).catch(() => null) : Promise.resolve(null));
+
+  /* ---------- shared UI helpers ---------- */
+  let toastTimer;
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 2200);
+  }
+  function buzz(ms = 8) { try { navigator.vibrate && navigator.vibrate(ms); } catch {} }
+
+  let openSheet = null;
+  function showSheet(id) {
+    closeSheet();
+    openSheet = $(id); openSheet.hidden = false; $("scrim").hidden = false;
+    if (id === "sheetKbd") setTimeout(() => $("kbdIn").focus(), 60);
+  }
+  function closeSheet() {
+    if (openSheet) openSheet.hidden = true;
+    openSheet = null; $("scrim").hidden = true;
+    $("kbdIn").blur();
+    disarmPower();
+  }
+  $("scrim").addEventListener("click", closeSheet);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && openSheet && document.activeElement !== $("kbdIn")) closeSheet(); });
+
+  function setRole(r) {
+    role = r; store.set("role", r);
+    $("remote").hidden = r !== "remote";
+    $("receiver").hidden = r !== "pc";
+    closeSheet();
+    if (r === "remote") { stopReceiver(); room && room.presence({ role: "remote", name: null, os: null }).catch(() => {}); }
+    else { room && room.presence({ role: null }).catch(() => {}); maybeAutoStart(); }
+    renderStatus();
+  }
+
+  /* =====================================================
+     CONTROLE — gestures become actions sent over the room
+     ===================================================== */
+  const sid = Math.random().toString(36).slice(2, 10);
+  const tot = { mx: 0, my: 0, sx: 0, sy: 0 };   // cumulative totals (absolute state)
+  let sent = { mx: 0, my: 0, sx: 0, sy: 0 };
+  let pending = [], nextId = 1, lastSentMaxId = 0, lastActSend = 0;
+  let pcPeer = null, offlineToastAt = 0;
+
+  function act(a) {
+    if (!pcPeer) {
+      const now = Date.now();
+      if (now - offlineToastAt > 2500) { offlineToastAt = now; toast(room ? "PC offline: abra o receptor no computador" : "Abra este controle no app do Claude"); }
+      return;
+    }
+    pending.push(Object.assign({}, a, { id: nextId++, at: Date.now() }));
+  }
+
+  function tick() {
+    if (role !== "remote" || !room || !pcPeer || !room.connected()) return;
+    const now = Date.now();
+    pending = pending.filter((a) => now - a.at < 4000);       // never fire stale clicks
+    const cur = { mx: Math.round(tot.mx), my: Math.round(tot.my), sx: tot.sx, sy: tot.sy };
+    const moved = cur.mx !== sent.mx || cur.my !== sent.my || cur.sx !== sent.sx || cur.sy !== sent.sy;
+    const fresh = pending.length && pending[pending.length - 1].id > lastSentMaxId;
+    const resend = pending.length && now - lastActSend > 450;
+    if (!moved && !fresh && !resend) return;
+    let acts = pending.slice(0, 24).map(({ at, ...a }) => a);
+    const data = { sid, mx: cur.mx, my: cur.my, sx: cur.sx, sy: cur.sy, acts };
+    const enc = new TextEncoder();
+    while (acts.length > 1 && enc.encode(JSON.stringify(data)).length > 3800) { acts = acts.slice(0, -1); data.acts = acts; }
+    room.emit("rc", data).catch(() => {});
+    sent = cur;
+    if (acts.length) { lastActSend = now; lastSentMaxId = Math.max(lastSentMaxId, acts[acts.length - 1].id); }
+  }
+  setInterval(tick, 40);
+
+  /* Touchpad */
+  const pad = $("pad"), knob = $("knob");
+  const pts = new Map();
+  let g = null, lastTapAt = 0, sAccX = 0, sAccY = 0;
+  const STEP = 26;
+
+  function knobTo(x, y) {
+    const r = pad.getBoundingClientRect();
+    knob.style.transform = `translate(${x - r.left - r.width / 2}px, ${y - r.top - r.height / 2}px) scale(1.15)`;
+  }
+  function knobHome() { knob.style.transform = ""; pad.classList.remove("touching", "dragging"); }
+  function ripple(x, y) {
+    const r = pad.getBoundingClientRect(), el = document.createElement("span");
+    el.className = "ripple"; el.style.left = (x - r.left) + "px"; el.style.top = (y - r.top) + "px";
+    pad.appendChild(el); setTimeout(() => el.remove(), 500);
+  }
+
+  pad.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    try { pad.setPointerCapture(e.pointerId); } catch {}
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY, t: e.timeStamp });
+    if (pts.size === 1) {
+      g = { start: e.timeStamp, moved: 0, max: 1, armed: e.timeStamp - lastTapAt < 320, dragging: false, longFired: false, x: e.clientX, y: e.clientY };
+      g.long = setTimeout(() => {
+        if (g && g.max === 1 && g.moved < 10 && !g.dragging) { g.longFired = true; act({ t: "click", button: "right" }); buzz(18); ripple(g.x, g.y); }
+      }, 550);
+      pad.classList.add("touching"); knobTo(e.clientX, e.clientY);
+    } else if (g) {
+      g.max = Math.max(g.max, pts.size); clearTimeout(g.long);
+    }
+  });
+
+  pad.addEventListener("pointermove", (e) => {
+    const p = pts.get(e.pointerId);
+    if (!p || !g) return;
+    const dx = e.clientX - p.x, dy = e.clientY - p.y, dt = Math.max(1, e.timeStamp - p.t);
+    p.x = e.clientX; p.y = e.clientY; p.t = e.timeStamp;
+    const dist = Math.hypot(dx, dy);
+    g.moved += dist;
+    if (g.moved > 10) clearTimeout(g.long);
+    if (pts.size === 1 && g.max === 1) {
+      if (g.armed && !g.dragging && g.moved > 6) { g.dragging = true; pad.classList.add("dragging"); act({ t: "down", button: "left" }); buzz(12); }
+      const speed = dist / dt;                                   // px per ms
+      const gain = settings.sens * (0.75 + Math.min(speed, 2.5) * 0.9);
+      tot.mx += dx * gain; tot.my += dy * gain;
+      knobTo(e.clientX, e.clientY);
+    } else if (pts.size >= 2) {
+      const sign = settings.natural ? 1 : -1;
+      sAccY += (dy / pts.size) * sign;
+      sAccX += (-dx / pts.size) * sign;
+      while (Math.abs(sAccY) >= STEP) { const s = Math.sign(sAccY); tot.sy += s; sAccY -= s * STEP; }
+      while (Math.abs(sAccX) >= STEP) { const s = Math.sign(sAccX); tot.sx += s; sAccX -= s * STEP; }
+    }
+  });
+
+  function endPointer(e) {
+    if (!pts.has(e.pointerId)) return;
+    pts.delete(e.pointerId);
+    if (pts.size || !g) return;
+    clearTimeout(g.long);
+    const dur = e.timeStamp - g.start;
+    if (g.dragging) act({ t: "up", button: "left" });
+    else if (!g.longFired && e.type !== "pointercancel") {
+      if (g.max >= 2 && g.moved < 24 && dur < 320) { act({ t: "click", button: "right" }); buzz(); ripple(g.x, g.y); }
+      else if (g.max === 1 && g.moved < 10 && dur < 280) { act({ t: "click", button: "left" }); buzz(); ripple(g.x, g.y); lastTapAt = e.timeStamp; }
+    }
+    sAccX = sAccY = 0; g = null; knobHome();
+  }
+  pad.addEventListener("pointerup", endPointer);
+  pad.addEventListener("pointercancel", endPointer);
+  pad.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  /* Buttons with data-act (press-and-hold repeats where data-repeat) */
+  document.querySelectorAll("[data-act]").forEach((btn) => {
+    const a = JSON.parse(btn.dataset.act);
+    let timer = null, delay = null, fired = false;
+    const stop = () => { clearTimeout(delay); clearInterval(timer); timer = delay = null; btn.classList.remove("held"); };
+    if (btn.hasAttribute("data-repeat")) {
+      btn.addEventListener("pointerdown", (e) => {
+        e.preventDefault(); fired = true; act(a); buzz(); btn.classList.add("held");
+        delay = setTimeout(() => { timer = setInterval(() => act(a), 110); }, 380);
+      });
+      ["pointerup", "pointerleave", "pointercancel"].forEach((t) => btn.addEventListener(t, stop));
+      btn.addEventListener("click", () => { if (!fired) act(a); fired = false; }); // keyboard activation
+    } else {
+      btn.addEventListener("click", () => { act(a); buzz(); });
+    }
+  });
+
+  /* Live keyboard: diff the field and send only what changed */
+  const kbdIn = $("kbdIn");
+  let kbdPrev = "";
+  kbdIn.addEventListener("input", () => {
+    const now = kbdIn.value;
+    let i = 0;
+    while (i < kbdPrev.length && i < now.length && kbdPrev[i] === now[i]) i++;
+    const removed = kbdPrev.length - i, added = now.slice(i);
+    if (removed > 0) act({ t: "key", key: "backspace", n: Math.min(removed, 50) });
+    for (let k = 0; k < added.length; k += 400) act({ t: "text", text: added.slice(k, k + 400) });
+    kbdPrev = now;
+    if (now.length > 200) { kbdIn.value = kbdPrev = ""; }
+  });
+  kbdIn.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); act({ t: "key", key: "enter" }); kbdIn.value = kbdPrev = ""; }
+    else if (e.key === "Backspace" && kbdIn.value === "") { act({ t: "key", key: "backspace" }); }
+  });
+
+  /* Power sheet: restart/shutdown need a second tap */
+  let armedTile = null, armTimer = null;
+  function disarmPower() {
+    if (!armedTile) return;
+    armedTile.classList.remove("armed");
+    armedTile.querySelector("span").textContent = armedTile.dataset.label;
+    armedTile = null; clearTimeout(armTimer);
+  }
+  document.querySelectorAll("[data-power]").forEach((tile) => {
+    const span = tile.querySelector("span");
+    if (span) tile.dataset.label = span.textContent;
+    tile.addEventListener("click", () => {
+      const action = tile.dataset.power;
+      if (tile.hasAttribute("data-confirm") && armedTile !== tile) {
+        disarmPower(); armedTile = tile; tile.classList.add("armed");
+        span.textContent = "Toque de novo"; buzz(20);
+        armTimer = setTimeout(disarmPower, 3000);
+        return;
+      }
+      disarmPower();
+      if (!pcPeer) { act({ t: "power", action }); return; }   // shows the offline notice
+      act({ t: "power", action }); buzz(20);
+      toast({ lock: "Bloqueando o PC", sleep: "Suspendendo o PC", restart: "Reiniciando o PC", shutdown: "Desligando o PC" }[action]);
+      closeSheet();
+    });
+  });
+
+  /* Header + settings */
+  $("kbdBtn").addEventListener("click", () => showSheet("sheetKbd"));
+  $("pwrBtn").addEventListener("click", () => showSheet("sheetPwr"));
+  $("moreBtn").addEventListener("click", () => showSheet("sheetMore"));
+  $("statusBtn").addEventListener("click", () => toast($("statusText").textContent));
+  const sens = $("sens");
+  sens.value = settings.sens; $("sensOut").textContent = Number(settings.sens).toFixed(1) + "×";
+  sens.addEventListener("input", () => { settings.sens = Number(sens.value); $("sensOut").textContent = settings.sens.toFixed(1) + "×"; store.set("sens", settings.sens); });
+  const nat = $("natural");
+  nat.setAttribute("aria-checked", String(settings.natural));
+  nat.addEventListener("click", () => { settings.natural = !settings.natural; nat.setAttribute("aria-checked", String(settings.natural)); store.set("natural", settings.natural); });
+  $("toReceiver").addEventListener("click", () => setRole("pc"));
+  $("toRemote").addEventListener("click", () => setRole("remote"));
+
+  function renderStatus() {
+    const dot = $("dot"), txt = $("statusText");
+    if (!room) { dot.dataset.s = "off"; txt.textContent = "Abra no app do Claude para conectar"; $("pcName").textContent = "Meu PC"; return; }
+    if (!room.connected()) { dot.dataset.s = "warn"; txt.textContent = "Conectando…"; return; }
+    if (!pcPeer) { dot.dataset.s = "off"; txt.textContent = "PC offline · abra o receptor no computador"; $("pcName").textContent = "Meu PC"; return; }
+    const pr = pcPeer.presence || {};
+    dot.dataset.s = "ok";
+    $("pcName").textContent = typeof pr.name === "string" && pr.name ? pr.name : "Meu PC";
+    txt.textContent = "Conectado" + (pr.os === "Darwin" ? " · Mac" : pr.os ? " · " + pr.os : "");
+  }
+
+  /* =====================================================
+     RECEPTOR — runs on the PC inside the Claude desktop app
+     ===================================================== */
+  let rxActive = false, rxInfo = null, queue = [], inflight = false;
+  const sessions = new Map();
+  const KEYS = new Set(["enter", "backspace", "tab", "esc", "space", "delete", "up", "down", "left", "right", "home", "end", "page_up", "page_down", "ctrl", "alt", "shift", "cmd", "mod",
+    ..."abcdefghijklmnopqrstuvwxyz0123456789".split(""), ...Array.from({ length: 12 }, (_, i) => "f" + (i + 1))]);
+  const BUTTONS = new Set(["left", "right", "middle"]);
+  const MEDIA = new Set(["vol_up", "vol_down", "mute", "play_pause", "next", "prev"]);
+  const NAV = new Set(["back", "home", "tasks", "desktop"]);
+  const POWER = new Set(["lock", "sleep", "restart", "shutdown"]);
+  const modKey = () => (rxInfo && rxInfo.os === "Darwin" ? "cmd" : "ctrl");
+
+  function sanitize(a) {
+    switch (a.t) {
+      case "click": return BUTTONS.has(a.button) ? { t: "click", button: a.button, count: a.count === 2 ? 2 : 1 } : null;
+      case "down": case "up": return BUTTONS.has(a.button) ? { t: a.t, button: a.button } : null;
+      case "key": return KEYS.has(a.key) ? { t: "key", key: a.key === "mod" ? modKey() : a.key, n: Math.max(1, Math.min(50, a.n | 0 || 1)) } : null;
+      case "combo": return Array.isArray(a.keys) && a.keys.length <= 4 && a.keys.every((k) => KEYS.has(k)) ? { t: "combo", keys: a.keys.map((k) => (k === "mod" ? modKey() : k)) } : null;
+      case "text": return typeof a.text === "string" && a.text ? { t: "text", text: a.text.slice(0, 500) } : null;
+      case "media": return MEDIA.has(a.key) ? { t: "media", key: a.key } : null;
+      case "nav": return NAV.has(a.key) ? { t: "nav", key: a.key } : null;
+      case "power": return POWER.has(a.action) ? { t: "power", action: a.action } : null;
+      default: return null;
+    }
+  }
+  const LABEL = {
+    click: (a) => (a.button === "right" ? "clique direito" : "clique"), down: () => "arrastar…", up: () => "soltar",
+    key: (a) => "tecla " + a.key + (a.n > 1 ? " ×" + a.n : ""), combo: (a) => a.keys.join("+"), text: (a) => "digitou \"" + a.text.slice(0, 24) + (a.text.length > 24 ? "…" : "") + "\"",
+    media: (a) => ({ vol_up: "volume +", vol_down: "volume −", mute: "silenciar", play_pause: "tocar/pausar", next: "próxima", prev: "anterior" })[a.key],
+    nav: (a) => ({ back: "voltar", home: "menu iniciar", tasks: "alternar janelas", desktop: "área de trabalho" })[a.key],
+    power: (a) => ({ lock: "bloquear", sleep: "suspender", restart: "reiniciar", shutdown: "desligar" })[a.action],
+  };
+  const logItems = [];
+  function logAct(a) {
+    const fn = LABEL[a.t];
+    if (fn) logLine(fn(a));
+  }
+  function logLine(text) {
+    logItems.unshift({ time: new Date().toTimeString().slice(0, 8), text });
+    logItems.length = Math.min(logItems.length, 7);
+    const ul = $("rxLog"); ul.replaceChildren();
+    for (const it of logItems) {
+      const li = document.createElement("li"), tm = document.createElement("time"), sp = document.createElement("span");
+      tm.textContent = it.time; sp.textContent = it.text; li.append(tm, sp); ul.append(li);
+    }
+  }
+
+  function push(a) {
+    const last = queue[queue.length - 1];
+    if (last && (a.t === "move" || a.t === "scroll") && last.t === a.t) { last.dx += a.dx; last.dy += a.dy; }
+    else queue.push(a);
+    if (a.t !== "move" && a.t !== "scroll") logAct(a);
+    if (queue.length > 400) queue = queue.filter((x) => x.t !== "move").slice(-200);
+  }
+
+  function onRemote(m) {
+    if (!rxActive || !m.isMe || m.sameTab || m.kind !== "viewer") return;   // only your own phone
+    const d = m.data;
+    if (!d || typeof d.sid !== "string" || d.sid.length > 16) return;
+    const n = (k) => (Number.isFinite(d[k]) ? Math.trunc(d[k]) : 0);
+    let st = sessions.get(d.sid);
+    if (!st) {
+      st = { mx: n("mx"), my: n("my"), sx: n("sx"), sy: n("sy"), last: 0 };
+      sessions.set(d.sid, st);
+      if (sessions.size > 8) sessions.delete(sessions.keys().next().value);
+    } else {
+      const dx = n("mx") - st.mx, dy = n("my") - st.my, sx = n("sx") - st.sx, sy = n("sy") - st.sy;
+      if (dx || dy) push({ t: "move", dx, dy });
+      if (sx || sy) push({ t: "scroll", dx: sx, dy: sy });
+      st.mx = n("mx"); st.my = n("my"); st.sx = n("sx"); st.sy = n("sy");
+    }
+    const acts = Array.isArray(d.acts) ? d.acts.slice(0, 30) : [];
+    for (const a of acts) {
+      if (!a || !Number.isInteger(a.id) || a.id <= st.last) continue;
+      st.last = a.id;
+      const clean = sanitize(a);
+      if (clean) push(clean);
+    }
+    if (acts.length) room.emit("ack", { sid: d.sid, id: st.last }).catch(() => {});
+    kick();
+  }
+
+  async function kick() {
+    if (inflight || !queue.length || !mcp || !rxActive) return;
+    inflight = true;
+    try {
+      if (queue[0].t === "power") {
+        const p = queue.shift();
+        await mcp.callTool(SERVER, "pc_power", { action: p.action }, { cache: false });
+      } else {
+        let end = queue.findIndex((a) => a.t === "power");
+        if (end < 0) end = queue.length;
+        const batch = queue.splice(0, Math.min(end, 150));
+        await mcp.callTool(SERVER, "pc_input", { actions: batch }, { cache: false });
+      }
+      rxError(null);
+    } catch (e) {
+      handleMcpError(e);
+    } finally {
+      inflight = false;
+      if (queue.length && rxActive) kick();
+    }
+  }
+
+  function handleMcpError(e) {
+    const code = e && e.code;
+    if (code === "cancelled") { rxError("O app do Claude recusou o último comando. Para não confirmar um a um, permita sempre este servidor."); return; }
+    if (code === "server_not_connected" || code === "server_not_found") {
+      stopReceiver(); rxError("Servidor pc_remote não encontrado. Abra este controle no app Claude para desktop e confira a configuração abaixo.");
+    } else if (code === "not_in_manifest" || code === "approval_required" || code === "not_granted") {
+      stopReceiver(); rxError("Acesso ao servidor local não foi liberado. Toque em Permissões e permita pc_remote."); $("rxPerms").hidden = false;
+    } else if (code === "tool_error") {
+      rxError("O PC não conseguiu executar: " + String(e.message || "erro desconhecido").slice(0, 160));
+    } else if (code === "capability_disabled" || code === "capability_removed") {
+      stopReceiver(); rxError("Esta janela não consegue falar com servidores locais. Use o app Claude para desktop.");
+    } else {
+      rxError("Falha temporária ao falar com o PC" + (code ? " (" + code + ")" : "") + ". Os próximos comandos tentam de novo.");
+    }
+  }
+
+  function rxError(msg) { const el = $("rxErr"); el.hidden = !msg; el.textContent = msg || ""; }
+  function renderRx(state, sub) {
+    const dot = $("rxDot");
+    const map = {
+      off: ["off", "Receptor desligado", "Ative para receber comandos do celular."],
+      checking: ["warn", "Verificando o PC…", "Pode aparecer um pedido de permissão do app."],
+      on: ["ok", "Recebendo comandos", ""],
+      noapp: ["off", "Abra no app Claude para desktop", "O receptor precisa do app desktop para controlar o mouse e o teclado."],
+    };
+    const [s, title, text] = map[state];
+    dot.dataset.s = s; $("rxTitle").textContent = title; $("rxSub").textContent = sub || text;
+    $("rxToggle").textContent = state === "on" ? "Pausar receptor" : "Ativar receptor";
+    $("rxToggle").disabled = state === "checking";
+    $("rxTest").disabled = state !== "on";
+  }
+
+  function remotesHere() {
+    if (!room) return 0;
+    return room.peers().filter((p) => p.isMe && !p.sameTab && p.presence && p.presence.role === "remote").length;
+  }
+  function rxSubText() {
+    const n = remotesHere();
+    const name = rxInfo ? rxInfo.name + " · " : "";
+    return name + (n ? (n === 1 ? "1 controle conectado" : n + " controles conectados") : "Nenhum controle aberto agora");
+  }
+
+  async function startReceiver() {
+    mcp = await use("mcp");
+    if (!mcp) { renderRx("noapp"); return; }
+    renderRx("checking"); rxError(null);
+    try {
+      const r = await mcp.callTool(SERVER, "pc_status", {}, { cache: false });
+      const p = (r && r.payload) || {};
+      if (!p.ready) { renderRx("off"); rxError("O servidor respondeu, mas não acessa mouse e teclado: " + String(p.error || "motivo desconhecido").slice(0, 160)); return; }
+      rxInfo = { name: String(p.name || "PC").slice(0, 40), os: String(p.os || "").slice(0, 12) };
+      rxActive = true; $("rxPerms").hidden = true;
+      store.set("rxAuto", true);
+      room && room.presence({ role: "pc", name: rxInfo.name, os: rxInfo.os }).catch(() => {});
+      renderRx("on", rxSubText());
+    } catch (e) {
+      renderRx("off"); handleMcpError(e);
+    }
+  }
+  function stopReceiver() {
+    if (!rxActive) { if (role === "pc") renderRx("off"); return; }
+    rxActive = false; queue = [];
+    room && room.presence({ role: null, name: null, os: null }).catch(() => {});
+    renderRx("off");
+  }
+  $("rxToggle").addEventListener("click", () => { if (rxActive) { stopReceiver(); store.set("rxAuto", false); } else startReceiver(); });
+  $("rxTest").addEventListener("click", () => {
+    [[60, 0], [0, 60], [-60, 0], [0, -60]].forEach(([dx, dy]) => queue.push({ t: "move", dx, dy }));
+    logLine("teste: cursor em quadrado");
+    kick();
+  });
+  $("rxPerms").addEventListener("click", () => { perms && perms.manage().catch(() => toast("Abra o menu Permissões do artifact e libere pc_remote")); });
+  $("copyCfg").addEventListener("click", () => {
+    const text = $("cfg").textContent;
+    const done = () => toast("Configuração copiada");
+    try {
+      navigator.clipboard.writeText(text).then(done, () => selectCfg());
+    } catch { selectCfg(); }
+  });
+  function selectCfg() { const r = document.createRange(); r.selectNodeContents($("cfg")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Selecionado: copie com Ctrl+C"); }
+
+  async function maybeAutoStart() {
+    if (role !== "pc" || rxActive) return;
+    renderRx("off");
+    if (!store.get("rxAuto", false) || !perms) return;
+    const st = await perms.state("mcp:" + SERVER).catch(() => "unavailable");
+    if (st === "granted") startReceiver();
+  }
+
+  /* =====================================================
+     Boot
+     ===================================================== */
+  setRole(role);
+
+  (async () => {
+    perms = await use("permissions");
+    room = await use("room");
+    if (room) {
+      room.onConnection(() => renderStatus());
+      room.onPeers((ch) => {
+        pcPeer = ch.peers.find((p) => p.isMe && !p.sameTab && p.kind === "viewer" && p.presence && p.presence.role === "pc") || null;
+        renderStatus();
+        if (rxActive) $("rxSub").textContent = rxSubText();
+      }, () => { pcPeer = null; renderStatus(); });
+      room.on("rc", onRemote);
+      room.on("ack", (m) => {
+        if (!m.isMe || !m.data || m.data.sid !== sid || !Number.isInteger(m.data.id)) return;
+        pending = pending.filter((a) => a.id > m.data.id);
+      });
+      if (role === "remote") room.presence({ role: "remote" }).catch(() => {});
+    }
+    renderStatus();
+    if (role === "pc") maybeAutoStart();
+  })();
+})();
+</script>
