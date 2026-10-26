@@ -28,7 +28,7 @@ Uma "ilha dinâmica" (estilo iPhone/HyperOS) ao redor da câmera frontal, para q
 
 ### 📊 Estatísticas
 
-![Estatísticas do GitHub](https://github-readme-stats.vercel.app/api?username=EnzoOlivah&show_icons=true&theme=tokyonight&include_all_commits=true&count_private=true&hide_border=true&locale=pt-br)
+![Estatísticas do GitHub](https://github-readme-stats.vercel.app/api?username=EnzoOlivah&show_icons=true&theme=tokyonight&hide_border=true&locale=pt-br)
 ![Linguagens mais usadas](https://github-readme-stats.vercel.app/api/top-langs/?username=EnzoOlivah&theme=tokyonight&layout=compact&hide_border=true&locale=pt-br)
 
 ![Sequência de commits](https://streak-stats.demolab.com?user=EnzoOlivah&theme=tokyonight&hide_border=true&locale=pt_BR)
