@@ -18,6 +18,14 @@ celular (app Claude)  ──sala do artifact──▶  PC (app Claude desktop, m
 
 ## Instalação no PC (uma vez)
 
+**Jeito rápido (Windows):** baixe `instalar-windows.bat` e `pc_remote_server.py` para a mesma
+pasta e dê dois cliques no `.bat`. Ele instala as dependências, copia o servidor para
+`%USERPROFILE%\pc-remote` e registra o `pc_remote` no app Claude (com backup da configuração).
+Depois é só reiniciar o app e seguir o passo 3 abaixo.
+
+**Manual:**
+
+
 1. Instale o Python 3.10+ e as dependências:
    ```
    pip install -r requirements.txt

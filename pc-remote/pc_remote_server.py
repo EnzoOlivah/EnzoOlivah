@@ -194,5 +194,45 @@ def pc_power(action: str) -> dict[str, Any]:
     return {"ok": True, "action": action}
 
 
+def _install() -> None:
+    """Registra este servidor como `pc_remote` na configuração do app Claude para desktop."""
+    import json
+    import os
+    import shutil
+    import sys
+    from pathlib import Path
+
+    script = str(Path(__file__).resolve())
+    candidates: list[Path] = []
+    if SYSTEM == "Windows":
+        if os.environ.get("APPDATA"):
+            candidates.append(Path(os.environ["APPDATA"]) / "Claude")
+        if os.environ.get("LOCALAPPDATA"):  # versão da Microsoft Store
+            packages = Path(os.environ["LOCALAPPDATA"]) / "Packages"
+            candidates += [p / "LocalCache" / "Roaming" / "Claude" for p in packages.glob("Claude_*")]
+    elif SYSTEM == "Darwin":
+        candidates.append(Path.home() / "Library" / "Application Support" / "Claude")
+    else:
+        candidates.append(Path.home() / ".config" / "Claude")
+
+    for folder in [d for d in candidates if d.is_dir()] or candidates[:1]:
+        folder.mkdir(parents=True, exist_ok=True)
+        config = folder / "claude_desktop_config.json"
+        data: dict[str, Any] = {}
+        if config.exists():
+            text = config.read_text(encoding="utf-8-sig").strip()
+            if text:
+                data = json.loads(text)
+            shutil.copyfile(config, config.with_name(config.name + ".bak"))
+        data.setdefault("mcpServers", {})["pc_remote"] = {"command": sys.executable, "args": [script]}
+        config.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"Configurado: {config}")
+
+
 if __name__ == "__main__":
-    server.run()
+    import sys
+
+    if "--install" in sys.argv:
+        _install()
+    else:
+        server.run()
